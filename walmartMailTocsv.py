@@ -91,13 +91,22 @@ with open(args.input, 'r') as f:
 
 
 d = pd.DataFrame(table, columns=["Product", "quantity x price", "total price"])
+# add per item shared price
+
+first_col = string.ascii_lowercase[4 + len(args.persons)]
+last_col = string.ascii_lowercase[4 + len(args.persons) * 2 - 1]
+price_fomula = []
+for i in range(2, len(d) + 2):
+    price_fomula.append("=SUM(${1}${0}:${2}${0})"
+                        .format(i, first_col, last_col))
+d["shared cost"] = pd.Series(data=price_fomula, index=d.index)
 # add persons columns
 for p in args.persons:
     d["{} share".format(p)] = pd.Series(data=[0] * len(d), index=d.index)
-first_col = string.ascii_lowercase[3]
-last_col = string.ascii_lowercase[3 + len(args.persons) - 1]
+first_col = string.ascii_lowercase[4]
+last_col = string.ascii_lowercase[4 + len(args.persons) - 1]
 for i, p in enumerate(args.persons):
-    in_col = 3 + i
+    in_col = 4 + i
     in_col_name = string.ascii_lowercase[in_col]
     price_fomula = []
     for j in range(2, len(d) + 2):
@@ -106,20 +115,20 @@ for i, p in enumerate(args.persons):
     d["{} cost".format(p)] = pd.Series(data=price_fomula, index=d.index)
 
 # add footer (totals)
-per_person_total = [""] * (3 + len(args.persons) - 1) + ["Total"]
+per_person_total = [""] * (4 + len(args.persons) - 1) + ["Total"]
 for i in range(len(args.persons)):
-    col = string.ascii_lowercase[3 + len(args.persons) + i]
+    col = string.ascii_lowercase[4 + len(args.persons) + i]
     per_person_total.append("=SUM(${0}$2:${0}${1})".format(col, len(d) + 1))
 
 # sum of delivery and taxes
 shared_price = "(${0}${1} + ${0}${2})".format('B', 1 + len(d) + 4, 1 + len(d) + 5)
 
-per_person_total_plus_shares = [""] * (3 + len(args.persons) - 1) + ["Total TTC + delivery"]
-first_col = string.ascii_lowercase[3 + len(args.persons)]
-last_col = string.ascii_lowercase[3 + 2 * len(args.persons) - 1]
+per_person_total_plus_shares = [""] * (4 + len(args.persons) - 1) + ["Total TTC + delivery"]
+first_col = string.ascii_lowercase[4 + len(args.persons)]
+last_col = string.ascii_lowercase[4 + 2 * len(args.persons) - 1]
 previous_line = 1 + len(d) + 1
 for i in range(len(args.persons)):
-    col = string.ascii_lowercase[3 + len(args.persons) + i]
+    col = string.ascii_lowercase[4 + len(args.persons) + i]
     per_person_total_plus_shares.append("=${0}${1} + {2} / SUM(${3}${1}:${4}${1}) * ${0}${1}"
                                         .format(col, previous_line, shared_price, first_col, last_col))
 
