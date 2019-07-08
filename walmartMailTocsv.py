@@ -35,7 +35,7 @@ with open(args.input, 'r') as f:
     total = None
     for line in f:
         line = line.replace("\t", "").replace("    ", "").replace("\n", "")
-        print("{}\t{}\t{}".format(line, section, state))
+        # print("{}\t{}\t{}".format(line, section, state))
         if line == "":
             continue
         elif line == "Item details":
