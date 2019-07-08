@@ -17,7 +17,7 @@ parser.add_argument('-p', '--involved-people',
                     required=False,
                     type=str,
                     nargs='+',
-                    default=['Pierrick', 'Nicolas L.', 'Emma', 'Eymar', 'Tanguy', 'Nicolas S.'],
+                    default=['Pierrick', 'Nicolas L. & Emma', 'Eymar', 'Tanguy', 'Nicolas S.'],
                     dest="persons")
 args = parser.parse_args()
 
@@ -35,14 +35,17 @@ with open(args.input, 'r') as f:
     total = None
     for line in f:
         line = line.replace("\t", "").replace("    ", "").replace("\n", "")
+        print("{}\t{}\t{}".format(line, section, state))
         if line == "":
             continue
         elif line == "Item details":
             continue
-        elif line == "Substituted" or line == "Weight Adjusted":
+        elif line[:11] == "Substituted" or line == "Weight Adjusted":
             section = "sub"
-        elif line == "Other Items" or line == "Fulfilled":
+            state = "name"
+        elif line == "Other Items" or line == "Fulfilled" or line == "Picked items":
             section = "order"
+            state = "name"
         elif line == "Out of Stock":
             section = "out of stock"
         elif line[:8] == "Subtotal":
@@ -62,20 +65,25 @@ with open(args.input, 'r') as f:
                 name = line
                 state = "detail"
             elif state == "detail":
-                price_detail = line
-                state = "price"
+                price_detail += line.replace("Lower price!", "")
+                if '×' in line:
+                    state = "price"
             else:
                 price = line.replace('$', "")
                 state = "name"
                 table.append([name, price_detail, price])
+                name = ""
+                price_detail = ""
+                price = ""
         elif section == "sub":
             if state == "name":
                 name = line
                 if line != "$0.00":
                     state = "detail"
-            elif state == "detail":
-                price_detail = line.replace("Lower price!", "")
-                state = "price"
+            elif state[:6] == "detail":
+                price_detail += line.replace("Lower price!", "")
+                if '×' in line:
+                    state = "price"
             elif state == "price":
                 price = line.replace('$', "")
                 state = "sub"
@@ -88,6 +96,9 @@ with open(args.input, 'r') as f:
                 else:
                     state = "name"
                     table.append([name, price_detail, price])
+                    name = ""
+                    price_detail = ""
+                    price = ""
 
 
 d = pd.DataFrame(table, columns=["Product", "quantity x price", "total price"])
