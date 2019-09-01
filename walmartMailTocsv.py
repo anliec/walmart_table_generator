@@ -17,7 +17,8 @@ parser.add_argument('-p', '--involved-people',
                     required=False,
                     type=str,
                     nargs='+',
-                    default=['Pierrick', 'Nicolas L. & Emma', 'Eymar', 'Tanguy', 'Nicolas S.'],
+                    default=['Pierrick', 'Nicolas L. & Emma', 'Eymar', 'Tanguy', 'Nicolas S.', 'Thomas', 'Louis',
+                             'Marie'],
                     dest="persons")
 args = parser.parse_args()
 
@@ -35,20 +36,23 @@ with open(args.input, 'r') as f:
     total = None
     for line in f:
         line = line.replace("\t", "").replace("    ", "").replace("\n", "")
+        line_formated = line.replace("-", " ").lower()
         # print("{}\t{}\t{}".format(line, section, state))
         if line == "":
             continue
         elif line == "Item details":
             continue
-        elif line[:11] == "Substituted" or line == "Weight Adjusted":
+        elif line_formated[:11] == "substituted" or line_formated[:15] == "weight adjusted":
             section = "sub"
             state = "name"
-        elif line == "Other Items" or line == "Fulfilled" or line == "Picked items":
+        elif line_formated[:11] == "other items" or line_formated[:9] == "fulfilled" or \
+                line_formated [:12] == "picked items":
             section = "order"
             state = "name"
-        elif line == "Out of Stock":
+        elif line_formated[:12] == "out of stock":
             section = "out of stock"
-        elif line[:8] == "Subtotal":
+            state = "name"
+        elif line_formated[:8] == "subtotal":
             section = "footer"
             subtotal = float(line.split('$')[-1])
         elif line[:12] == "Delivery fee":
@@ -69,7 +73,10 @@ with open(args.input, 'r') as f:
                 if '×' in line:
                     state = "price"
             else:
-                price = line.replace('$', "")
+                if section == "out of stock":
+                    price = "0"
+                else:
+                    price = line.replace('$', "")
                 state = "name"
                 table.append([name, price_detail, price])
                 name = ""
@@ -121,7 +128,7 @@ for i, p in enumerate(args.persons):
     in_col_name = string.ascii_lowercase[in_col]
     price_fomula = []
     for j in range(2, len(d) + 2):
-        price_fomula.append("=IF(SUM(${1}${0}:${2}${0}) = 0, 0, $C${0} * ${3}${0} / SUM(${1}${0}:${2}${0})"
+        price_fomula.append("=IF(SUM(${1}${0}:${2}${0})=0;0;$C${0}*${3}${0}/SUM(${1}${0}:${2}${0})"
                             .format(j, first_col, last_col, in_col_name))
     d["{} cost".format(p)] = pd.Series(data=price_fomula, index=d.index)
 
