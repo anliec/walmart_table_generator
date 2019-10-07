@@ -17,8 +17,8 @@ parser.add_argument('-p', '--involved-people',
                     required=False,
                     type=str,
                     nargs='+',
-                    default=['Pierrick', 'Nicolas L. & Emma', 'Eymar', 'Tanguy', 'Nicolas S.', 'Thomas', 'Louis',
-                             'Marie'],
+                    default=['Pierrick', 'Nicolas L. & Emma', 'Eymar', 'Guillaume', 'Nicolas S.', 'Thomas', 'Louis',
+                             'Marie', "Vincent"],
                     dest="persons")
 args = parser.parse_args()
 
