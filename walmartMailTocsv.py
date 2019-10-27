@@ -34,6 +34,7 @@ with open(args.input, 'r') as f:
     delivery = None
     taxes = None
     total = None
+    tip = 0
     for line in f:
         line = line.replace("\t", "").replace("    ", "").replace("\n", "")
         line_formated = line.replace("-", " ").lower()
@@ -58,6 +59,9 @@ with open(args.input, 'r') as f:
         elif line[:12] == "Delivery fee":
             section = "footer"
             delivery = float(line.split('$')[-1])
+        elif line[:10] == "Driver tip":
+            section = "footer"
+            tip = float(line.split('$')[-1])
         elif line[:9] == "Total tax":
             section = "footer"
             taxes = float(line.split('$')[-1])
@@ -138,10 +142,10 @@ for i in range(len(args.persons)):
     col = string.ascii_lowercase[4 + len(args.persons) + i]
     per_person_total.append("=SUM(${0}$2:${0}${1})".format(col, len(d) + 1))
 
-# sum of delivery and taxes
-shared_price = "(${0}${1} + ${0}${2})".format('B', 1 + len(d) + 4, 1 + len(d) + 5)
+# sum of delivery and taxes and tip
+shared_price = "(${0}${1} + ${0}${2} + ${0}${3})".format('B', 1 + len(d) + 4, 1 + len(d) + 5, 1 + len(d) + 7)
 
-per_person_total_plus_shares = [""] * (4 + len(args.persons) - 1) + ["Total TTC + delivery"]
+per_person_total_plus_shares = [""] * (4 + len(args.persons) - 1) + ["Total TTC + delivery + tip"]
 first_col = string.ascii_lowercase[4 + len(args.persons)]
 last_col = string.ascii_lowercase[4 + 2 * len(args.persons) - 1]
 previous_line = 1 + len(d) + 1
@@ -155,6 +159,8 @@ other_info.append(["Subtotal", subtotal])
 other_info.append(["Delivery", delivery])
 other_info.append(["Taxes", taxes])
 other_info.append(["Paid", total])
+other_info.append(["Tip", tip])
+other_info.append(["With tip", total + tip])
 other_info.append([])
 other_info.append(["Current Total", "=SUM(${1}${0}:${2}${0})".format(previous_line + 1, first_col, last_col)])
 
